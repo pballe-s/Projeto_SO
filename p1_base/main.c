@@ -14,13 +14,15 @@
 
 void *process_file(void *args)
 {
-	int end_file = 0;
+	int end_file = 0, *exit_value = malloc(sizeof(int));
 	arg *buffer = (arg *)args;
+	*exit_value = 0;
 	
 	while (1) {
     	unsigned int event_id, delay, wait_tid = 0;
     	size_t num_rows, num_columns, num_coords;
 		size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
+		
 
 		switch (get_next(buffer->fd_in)) {
   		case CMD_CREATE:
@@ -98,7 +100,9 @@ void *process_file(void *args)
 
         	break;
 
-      	case CMD_BARRIER:  // Not implemented
+      	case CMD_BARRIER:
+			*exit_value = BARRIER_EXIT;
+			pthread_exit((void*)exit_value);
     	case CMD_EMPTY:
     		break;
 
@@ -112,7 +116,7 @@ void *process_file(void *args)
   	}
 	close(buffer->fd_in);
 	close(buffer->fd_out);
-	return 0;
+	pthread_exit((void*)exit_value);
 }
 
 int main(int argc, char *argv[]) {
@@ -177,6 +181,7 @@ int main(int argc, char *argv[]) {
 		{
 			arg *buffer[max_threads];
 			pthread_t tid[max_threads];
+			int exit_values[max_threads], barrier = 0, *aux_exit_value;
 
 			
 			for (int i = 0; i < max_threads; i++)
@@ -193,8 +198,24 @@ int main(int argc, char *argv[]) {
 			}
 			for (int i = 0; i < max_threads; i++)
 			{
-				pthread_join(tid[i], NULL);
+				pthread_join(tid[i], (void**)&aux_exit_value);
+				exit_values[i] = *aux_exit_value;
 			}
+			barrier = any(exit_values, BARRIER_EXIT, max_threads);
+			while (barrier)
+			{
+				for (int i = 0; i < max_threads; i++)
+				{
+					pthread_create(&tid[i], 0, process_file, buffer[i]);
+				}
+				for (int i = 0; i < max_threads; i++)
+				{
+					pthread_join(tid[i], (void**)&aux_exit_value);
+					exit_values[i] = *aux_exit_value;	
+				}
+				barrier = any(exit_values, BARRIER_EXIT, max_threads);
+			}
+			free(aux_exit_value);
 			exit(EXIT_SUCCESS);
 		}
 	}

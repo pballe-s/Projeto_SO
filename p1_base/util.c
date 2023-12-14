@@ -83,3 +83,13 @@ char	*ft_itoa(int n)
 	}
 	return (num);
 }
+
+int any(int *array, int search, int length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		if (array[i] == search)
+			return 1;
+	}
+	return 0;
+}

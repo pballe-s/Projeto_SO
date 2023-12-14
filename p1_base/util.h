@@ -7,4 +7,5 @@
 	} arg;
 
 	char	*ft_itoa(int n);
+	int 	any(int *array, int search, int length);
 #endif
