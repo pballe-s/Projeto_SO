@@ -18,7 +18,7 @@ void *process_file(void *args)
 	arg *buffer = (arg *)args;
 	
 	while (1) {
-    	unsigned int event_id, delay;
+    	unsigned int event_id, delay, wait_tid = 0;
     	size_t num_rows, num_columns, num_coords;
 		size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
 
@@ -69,12 +69,12 @@ void *process_file(void *args)
        	break;
 
       	case CMD_WAIT:
-        	if (parse_wait(buffer->fd_in, &delay, NULL) == -1) {  // thread_id is not implemented
+        	if (parse_wait(buffer->fd_in, &delay, &wait_tid) == -1) {  // thread_id is not implemented
           		fprintf(stderr, "Invalid command. See HELP for usage\n");
           		continue;
         	}
 
-        	if (delay > 0) {
+        	if (delay > 0 && (wait_tid == 0 || (unsigned int)(buffer->thread_id + 1) == wait_tid)) {
           		printf("Waiting...\n");
           		ems_wait(delay);
         		}
