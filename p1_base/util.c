@@ -93,3 +93,12 @@ int any(int *array, int search, int length)
 	}
 	return 0;
 }
+
+void next_line(int fd)
+{
+	char *c = malloc(sizeof(char));
+	while (c[0] != '\n' && c[0] != '\0')
+	{
+		read(fd, c, 1);
+	}
+}
