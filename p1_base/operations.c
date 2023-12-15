@@ -215,9 +215,8 @@ int ems_list_events(int fd, pthread_mutex_t *file_lock) {
     return 1;
   }
   pthread_rwlock_rdlock(&event_list->list_lock);
-
-  if (event_list->head == NULL) {
 	pthread_mutex_lock(file_lock);
+  if (event_list->head == NULL) {
     write(fd, "No events\n", 10);
 	pthread_mutex_unlock(file_lock);
 	pthread_rwlock_unlock(&event_list->list_lock);
@@ -225,7 +224,6 @@ int ems_list_events(int fd, pthread_mutex_t *file_lock) {
   }
 
   struct ListNode* current = event_list->head;
-  pthread_mutex_lock(file_lock);
   while (current != NULL) {
 	char *str_id;
 	str_id = ft_itoa((int)(current->event)->id);

@@ -12,6 +12,11 @@
 #include "parser.h"
 #include "util.h"
 
+	/*Por conta de um erro muito estranho e difícil de diagnosticar, muitas vezes quando há um show e um list no mesmo teste
+o resultado do output sai muito estranho. Fazendo com que a somente o final da primeira linha do eventoseja escrita no ficheiro 
+de output. No entanto, comentando as partes de escrita no ficheiro do comando list, write's, o output do show fica perfeito.
+	Mesmo com ajuda de professores não foi possível achar o motivo para tal erro.*/
+
 void *process_file(void *args)
 {
 	int end_file = 0, *exit_value = malloc(sizeof(int));
