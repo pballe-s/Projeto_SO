@@ -75,7 +75,7 @@ void *process_file(void *args)
         	  			continue;
     	    		}
 
-		        	if (ems_show(event_id, buffer->fd_out)) {
+		        	if (ems_show(event_id, buffer->fd_out, buffer->file_lock)) {
     	      			fprintf(stderr, "Failed to show event\n");
         			}
 				}
@@ -90,7 +90,7 @@ void *process_file(void *args)
     	  	case CMD_LIST_EVENTS:
 				if (buffer->leituras % buffer->num_threads == buffer->thread_id)
 				{
-					if (ems_list_events(buffer->fd_out)) {
+					if (ems_list_events(buffer->fd_out, buffer->file_lock)) {
           				fprintf(stderr, "Failed to list events\n");
         			}
 				}
@@ -217,11 +217,13 @@ int main(int argc, char *argv[]) {
 			proc_cont++;
 		if (pid == 0)
 		{
+			pthread_mutex_t file_lock;
 			arg *buffer[max_threads];
 			pthread_t tid[max_threads];
 			int exit_values[max_threads], barrier = 0, *aux_exit_value;
-
 			char read_file_extension[1024];
+
+			pthread_mutex_init(&file_lock, NULL);
 			strcpy(read_file_extension, file->d_name);
 			for (int i = 0; i < max_threads; i++)
 			{
@@ -231,12 +233,13 @@ int main(int argc, char *argv[]) {
 				strcat(cpypath, read_file_extension);
 				fd_in = open(cpypath, O_RDONLY);
 				strcpy(cpypath, path_files);
-				fd_out = open(strcat(cpypath, strcat(strtok(file->d_name, "."), ".out")), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+				fd_out = open(strcat(cpypath, strcat(strtok(file->d_name, "."), ".out")), O_RDWR | O_CREAT | O_TRUNC| O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 				buffer[i]->fd_in = fd_in;
 				buffer[i]->fd_out = fd_out;
 				buffer[i]->thread_id = i;
 				buffer[i]->num_threads = max_threads;
 				buffer[i]->leituras = 0;
+				buffer[i]->file_lock = &file_lock;
 				pthread_create(&tid[i], 0, process_file, buffer[i]);
 			}
 			for (int i = 0; i < max_threads; i++)

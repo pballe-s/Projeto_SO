@@ -7,6 +7,7 @@ struct EventList* create_list() {
   if (!list) return NULL;
   list->head = NULL;
   list->tail = NULL;
+  pthread_rwlock_init(&list->list_lock, NULL);
   return list;
 }
 
